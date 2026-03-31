@@ -144,8 +144,11 @@ function ProjectCard({
       }`}
     >
       {/* Preview card */}
-      <div
-        className={`relative w-full shrink-0 overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5 ${
+      <a
+        href={project.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`relative block w-full shrink-0 overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5 ${
           isExpand ? "md:w-[420px] lg:w-[480px]" : containerClass
         }`}
         style={expandStyle}
@@ -211,7 +214,7 @@ function ProjectCard({
             </svg>
           </div>
         </div>
-      </div>
+      </a>
 
       {/* Project info — sits on the opposite side */}
       <div className={`flex-1 flex flex-col ${isLeft ? "md:items-start md:text-left" : "md:items-end md:text-right"}`}>
