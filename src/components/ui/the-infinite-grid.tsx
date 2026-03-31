@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   motion,
@@ -29,11 +29,20 @@ export const GridBackground = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(`grid-pattern-${++gridIdCounter}`);
   const patternId = idRef.current;
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMobile) return;
     const { left, top } = e.currentTarget.getBoundingClientRect();
     mouseX.set(e.clientX - left);
     mouseY.set(e.clientY - top);
@@ -43,6 +52,7 @@ export const GridBackground = ({
   const gridOffsetY = useMotionValue(0);
 
   useAnimationFrame(() => {
+    if (isMobile) return;
     gridOffsetX.set((gridOffsetX.get() + 0.5) % 40);
     gridOffsetY.set((gridOffsetY.get() + 0.5) % 40);
   });
@@ -56,18 +66,25 @@ export const GridBackground = ({
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
+      onMouseMove={isMobile ? undefined : handleMouseMove}
       className={cn("relative w-full overflow-hidden", className)}
     >
+      {/* Static grid on mobile, animated on desktop */}
       <div className="absolute inset-0 z-0 opacity-[0.04]">
-        <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} patternId={patternId + "-bg"} />
+        {isMobile ? (
+          <StaticGridPattern patternId={patternId + "-bg"} />
+        ) : (
+          <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} patternId={patternId + "-bg"} />
+        )}
       </div>
-      <motion.div
-        className="absolute inset-0 z-0 opacity-30"
-        style={{ maskImage, WebkitMaskImage: maskImage }}
-      >
-        <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} patternId={patternId + "-fg"} />
-      </motion.div>
+      {!isMobile && (
+        <motion.div
+          className="absolute inset-0 z-0 opacity-30"
+          style={{ maskImage, WebkitMaskImage: maskImage }}
+        >
+          <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} patternId={patternId + "-fg"} />
+        </motion.div>
+      )}
 
       <div className="absolute inset-0 pointer-events-none z-0">
         <div
@@ -117,6 +134,30 @@ const GridPattern = ({
             className="text-muted-foreground"
           />
         </motion.pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+    </svg>
+  );
+};
+
+const StaticGridPattern = ({ patternId }: { patternId: string }) => {
+  return (
+    <svg className="w-full h-full">
+      <defs>
+        <pattern
+          id={patternId}
+          width="40"
+          height="40"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M 40 0 L 0 0 0 40"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            className="text-muted-foreground"
+          />
+        </pattern>
       </defs>
       <rect width="100%" height="100%" fill={`url(#${patternId})`} />
     </svg>
