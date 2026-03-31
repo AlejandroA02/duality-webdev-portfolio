@@ -27,7 +27,7 @@ export function Hero() {
           </span>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center text-center px-6 pt-32 pb-24 md:pt-0 md:pb-0 min-h-screen justify-center">
+        <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 pt-28 pb-20 md:pt-0 md:pb-0 min-h-screen justify-center">
           {/* Label */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -35,7 +35,7 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="mb-8"
           >
-            <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-white/40 border border-white/10 px-4 py-2 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white/40 border border-white/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full whitespace-nowrap">
               Web Development Studio — Miami, FL
             </span>
           </motion.div>

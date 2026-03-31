@@ -88,15 +88,15 @@ export const GridBackground = ({
 
       <div className="absolute inset-0 pointer-events-none z-0">
         <div
-          className="absolute right-[-20%] top-[-20%] w-[40%] h-[40%] rounded-full blur-[120px]"
+          className="absolute right-[-20%] top-[-20%] w-[40%] h-[40%] rounded-full blur-[60px] md:blur-[120px]"
           style={{ backgroundColor: tr }}
         />
         <div
-          className="absolute right-[10%] top-[-10%] w-[20%] h-[20%] rounded-full blur-[100px]"
+          className="absolute right-[10%] top-[-10%] w-[20%] h-[20%] rounded-full blur-[50px] md:blur-[100px] hidden md:block"
           style={{ backgroundColor: trSec }}
         />
         <div
-          className="absolute left-[-10%] bottom-[-20%] w-[40%] h-[40%] rounded-full blur-[120px]"
+          className="absolute left-[-10%] bottom-[-20%] w-[40%] h-[40%] rounded-full blur-[60px] md:blur-[120px]"
           style={{ backgroundColor: bl }}
         />
       </div>
