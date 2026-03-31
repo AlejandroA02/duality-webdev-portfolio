@@ -51,7 +51,7 @@ const projects: Project[] = [
     tags: ["Scroll Animation", "3D Parallax", "GSAP", "Interactive"],
     image: "/videos/void-scroll-thumb.jpg",
     video: "/videos/void-scroll.mp4",
-    url: "https://demo-void-scroll-nglwiuy9j-alejandroa02s-projects.vercel.app",
+    url: "https://demo-void-scroll.vercel.app",
   },
   {
     name: "Atelier",
