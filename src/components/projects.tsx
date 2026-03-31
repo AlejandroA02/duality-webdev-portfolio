@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import Image from "next/image";
 
 interface Project {
@@ -10,6 +10,7 @@ interface Project {
   tags: string[];
   image: string;
   video?: string;
+  videoClassName?: string;
   url?: string;
 }
 
@@ -24,13 +25,14 @@ const projects: Project[] = [
     url: "https://forged-nine.vercel.app",
   },
   {
-    name: "Atelier",
+    name: "Mainline",
     description:
-      "A refined architecture studio site — editorial layouts, floor plan reveals, and elegant scroll transitions.",
-    tags: ["Editorial Layout", "Scroll Transitions", "Luxury Aesthetic", "Responsive"],
-    image: "/videos/atelier-poster.jpg",
-    video: "/videos/atelier.mp4",
-    url: "https://demo-arch-studio.vercel.app",
+      "Industrial-grade plumbing precision — dark cinematic aesthetic, brick textures, and a bold 3-step process.",
+    tags: ["Landing Page", "Dark Theme", "Industrial", "Responsive"],
+    image: "/videos/mainline-thumb.jpg",
+    video: "/videos/mainline.mp4",
+    videoClassName: "widescreen",
+    url: "https://mainline-one.vercel.app",
   },
   {
     name: "Elara",
@@ -39,6 +41,7 @@ const projects: Project[] = [
     tags: ["Landing Page", "Glassmorphism", "Animations", "Responsive"],
     image: "/videos/elara-thumb.jpg",
     video: "/videos/elara.mp4",
+    videoClassName: "widescreen",
     url: "https://elara-ashy.vercel.app",
   },
   {
@@ -51,13 +54,14 @@ const projects: Project[] = [
     url: "https://demo-void-scroll-nglwiuy9j-alejandroa02s-projects.vercel.app",
   },
   {
-    name: "Mainline",
+    name: "Atelier",
     description:
-      "Industrial-grade plumbing precision — dark cinematic aesthetic, brick textures, and a bold 3-step process.",
-    tags: ["Landing Page", "Dark Theme", "Industrial", "Responsive"],
-    image: "/videos/mainline-thumb.jpg",
-    video: "/videos/mainline.mp4",
-    url: "https://mainline-one.vercel.app",
+      "A refined architecture studio site — editorial layouts, floor plan reveals, and elegant scroll transitions.",
+    tags: ["Editorial Layout", "Scroll Transitions", "Luxury Aesthetic", "Responsive"],
+    image: "/videos/atelier-poster.png",
+    video: "/videos/atelier.mp4",
+    videoClassName: "widescreen",
+    url: "https://demo-arch-studio.vercel.app",
   },
 ];
 
@@ -72,20 +76,59 @@ function ProjectCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const isLeft = index % 2 === 0;
+  const isExpand = project.videoClassName === "expand";
+  const isWidescreen = project.videoClassName === "widescreen";
+  const [hovered, setHovered] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(false);
 
   const handleMouseEnter = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+    if (isExpand) {
+      setHovered(true);
+      // Delay video playback until the expand animation finishes
+      setTimeout(() => {
+        setVideoVisible(true);
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 600);
+    } else {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      }
     }
-  }, []);
+  }, [isExpand]);
 
   const handleMouseLeave = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
+    if (isExpand) {
+      setVideoVisible(false);
+      setHovered(false);
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
+    } else {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
     }
-  }, []);
+  }, [isExpand]);
+
+  // Container sizing based on mode
+  const containerClass = isWidescreen
+    ? "md:w-[520px] lg:w-[580px] aspect-video"
+    : "md:w-[420px] lg:w-[480px] aspect-square";
+
+  // For expand mode, use inline styles to animate aspect-ratio and width
+  const expandStyle = isExpand
+    ? {
+        aspectRatio: hovered ? "16 / 9" : "1 / 1",
+        width: undefined as string | undefined,
+        transition: "aspect-ratio 0.6s cubic-bezier(0.22, 1, 0.36, 1), width 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+      }
+    : undefined;
 
   return (
     <motion.article
@@ -100,9 +143,12 @@ function ProjectCard({
         isLeft ? "" : "md:flex-row-reverse"
       }`}
     >
-      {/* Square preview card */}
+      {/* Preview card */}
       <div
-        className="relative w-full md:w-[420px] lg:w-[480px] shrink-0 aspect-square overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5"
+        className={`relative w-full shrink-0 overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5 ${
+          isExpand ? "md:w-[420px] lg:w-[480px]" : containerClass
+        }`}
+        style={expandStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -110,13 +156,13 @@ function ProjectCard({
           src={project.image}
           alt={project.name}
           fill
-          className={`object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.05] ${
-            project.video ? "group-hover:opacity-0 transition-opacity duration-500" : ""
-          }`}
+          className={`object-cover transition-all duration-[800ms] ease-out ${
+            hovered || (!isExpand && project.video) ? "group-hover:scale-[1.05] group-hover:opacity-0" : ""
+          } ${isExpand && hovered ? "scale-[1.05] !opacity-0" : ""}`}
           sizes="(max-width: 768px) 100vw, 480px"
         />
 
-        {/* Video layer — only rendered if project has a video */}
+        {/* Video layer */}
         {project.video && (
           <video
             ref={videoRef}
@@ -124,15 +170,28 @@ function ProjectCard({
             muted
             playsInline
             preload="metadata"
-            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isExpand
+                ? videoVisible ? "opacity-100" : "opacity-0"
+                : "opacity-0 group-hover:opacity-100"
+            }`}
           />
         )}
 
         {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent transition-opacity duration-500 ${
+            isExpand
+              ? videoVisible ? "opacity-100" : "opacity-0"
+              : "opacity-0 group-hover:opacity-100"
+          }`}
+        />
 
         {/* View project pill on hover */}
-        <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+        <div className={`absolute bottom-5 right-5 transition-all duration-500 ${
+          isExpand
+            ? videoVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            : "opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+        }`}>
           <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm text-[#0A0A0A] px-4 py-2 rounded-full">
             <span className="text-[10px] font-mono tracking-[0.1em] uppercase font-medium">
               View Project
