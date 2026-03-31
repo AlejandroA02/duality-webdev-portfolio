@@ -1,57 +1,63 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import Image from "next/image";
 
-const projects = [
+interface Project {
+  name: string;
+  description: string;
+  tags: string[];
+  image: string;
+  video?: string;
+  url?: string;
+}
+
+const projects: Project[] = [
   {
-    name: "Meridian Finance",
+    name: "Forged",
     description:
-      "A fintech dashboard reimagined with clarity and speed — real-time data, zero clutter.",
-    tags: ["Web Development", "UI/UX", "Dashboard"],
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&h=900&fit=crop&q=80",
+      "An automotive restoration atelier — cinematic hero, bold typography, and a premium craft-first identity.",
+    tags: ["Landing Page", "Cinematic Design", "Automotive", "Responsive"],
+    image: "/videos/forged-thumb.jpg",
+    video: "/videos/forged.mp4",
+    url: "https://forged-nine.vercel.app",
   },
   {
-    name: "Coastal Realty",
+    name: "Atelier",
     description:
-      "Luxury real estate listings with immersive property tours and map-based search.",
-    tags: ["Web Development", "E-Commerce", "Maps Integration"],
-    image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&h=900&fit=crop&q=80",
+      "A refined architecture studio site — editorial layouts, floor plan reveals, and elegant scroll transitions.",
+    tags: ["Editorial Layout", "Scroll Transitions", "Luxury Aesthetic", "Responsive"],
+    image: "/videos/atelier-poster.jpg",
+    video: "/videos/atelier.mp4",
+    url: "https://demo-arch-studio.vercel.app",
   },
   {
-    name: "Nōm Kitchen",
+    name: "Elara",
     description:
-      "An elevated restaurant brand — online ordering, reservations, and editorial content.",
-    tags: ["Web Design", "Development", "CMS Integration"],
-    image:
-      "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=900&h=900&fit=crop&q=80",
+      "A premium aesthetics & wellness clinic — glassmorphism UI, animated blob backgrounds, and elegant booking flows.",
+    tags: ["Landing Page", "Glassmorphism", "Animations", "Responsive"],
+    image: "/videos/elara-thumb.jpg",
+    video: "/videos/elara.mp4",
+    url: "https://elara-ashy.vercel.app",
   },
   {
-    name: "Artisan Collective",
+    name: "VOID Scroll",
     description:
-      "A curated e-commerce marketplace connecting independent makers with global buyers.",
-    tags: ["E-Commerce", "Custom Theme", "Web Development"],
-    image:
-      "https://images.unsplash.com/photo-1559028012-481c04fa702d?w=900&h=900&fit=crop&q=80",
+      "An immersive scroll experience — words falling through 3D space, parallax depth, and cinematic motion.",
+    tags: ["Scroll Animation", "3D Parallax", "GSAP", "Interactive"],
+    image: "/videos/void-scroll-thumb.jpg",
+    video: "/videos/void-scroll.mp4",
+    url: "https://demo-void-scroll-nglwiuy9j-alejandroa02s-projects.vercel.app",
   },
   {
-    name: "Pulse Health",
+    name: "Mainline",
     description:
-      "Telehealth platform with HIPAA-compliant video, scheduling, and patient portals.",
-    tags: ["Web Application", "UI/UX", "Development"],
-    image:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=900&fit=crop&q=80",
-  },
-  {
-    name: "Vox Media Hub",
-    description:
-      "A content-first platform built for speed — editorial tools and blazing-fast delivery.",
-    tags: ["Web Development", "CMS", "Performance"],
-    image:
-      "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=900&h=900&fit=crop&q=80",
+      "Industrial-grade plumbing precision — dark cinematic aesthetic, brick textures, and a bold 3-step process.",
+    tags: ["Landing Page", "Dark Theme", "Industrial", "Responsive"],
+    image: "/videos/mainline-thumb.jpg",
+    video: "/videos/mainline.mp4",
+    url: "https://mainline-one.vercel.app",
   },
 ];
 
@@ -59,12 +65,27 @@ function ProjectCard({
   project,
   index,
 }: {
-  project: (typeof projects)[0];
+  project: Project;
   index: number;
 }) {
   const ref = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const isLeft = index % 2 === 0;
+
+  const handleMouseEnter = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, []);
 
   return (
     <motion.article
@@ -80,14 +101,33 @@ function ProjectCard({
       }`}
     >
       {/* Square preview card */}
-      <div className="relative w-full md:w-[420px] lg:w-[480px] shrink-0 aspect-square overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5">
+      <div
+        className="relative w-full md:w-[420px] lg:w-[480px] shrink-0 aspect-square overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <Image
           src={project.image}
           alt={project.name}
           fill
-          className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.05]"
+          className={`object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.05] ${
+            project.video ? "group-hover:opacity-0 transition-opacity duration-500" : ""
+          }`}
           sizes="(max-width: 768px) 100vw, 480px"
         />
+
+        {/* Video layer — only rendered if project has a video */}
+        {project.video && (
+          <video
+            ref={videoRef}
+            src={project.video}
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          />
+        )}
+
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
