@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import Image from "next/image";
 
 interface Project {
@@ -76,70 +76,45 @@ function ProjectCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const isLeft = index % 2 === 0;
-  const isExpand = project.videoClassName === "expand";
   const isWidescreen = project.videoClassName === "widescreen";
-  const [hovered, setHovered] = useState(false);
-  const [videoVisible, setVideoVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const handleMouseEnter = useCallback(() => {
-    if (isExpand) {
-      setHovered(true);
-      // Delay video playback until the expand animation finishes
-      setTimeout(() => {
-        setVideoVisible(true);
-        if (videoRef.current) {
-          videoRef.current.currentTime = 0;
-          videoRef.current.play().catch(() => {});
-        }
-      }, 600);
-    } else {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
-      }
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
     }
-  }, [isExpand]);
+  }, []);
 
   const handleMouseLeave = useCallback(() => {
-    if (isExpand) {
-      setVideoVisible(false);
-      setHovered(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
-    } else {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
     }
-  }, [isExpand]);
+  }, []);
 
   // Container sizing based on mode
   const containerClass = isWidescreen
     ? "md:w-[520px] lg:w-[580px] aspect-video"
     : "md:w-[420px] lg:w-[480px] aspect-square";
 
-  // For expand mode, use inline styles to animate aspect-ratio and width
-  const expandStyle = isExpand
-    ? {
-        aspectRatio: hovered ? "16 / 9" : "1 / 1",
-        width: undefined as string | undefined,
-        transition: "aspect-ratio 0.6s cubic-bezier(0.22, 1, 0.36, 1), width 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-      }
-    : undefined;
-
   return (
     <motion.article
       ref={ref}
-      initial={{ opacity: 0, x: isLeft ? -80 : 80 }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{
         duration: 1,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className={`group flex flex-col gap-8 md:flex-row md:items-center md:gap-16 ${
+      className={`group flex flex-col gap-6 md:flex-row md:items-center md:gap-16 ${
         isLeft ? "" : "md:flex-row-reverse"
       }`}
     >
@@ -148,10 +123,7 @@ function ProjectCard({
         href={project.url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`relative block w-full shrink-0 overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-black/5 ${
-          isExpand ? "md:w-[420px] lg:w-[480px]" : containerClass
-        }`}
-        style={expandStyle}
+        className={`relative block w-full shrink-0 overflow-hidden rounded-2xl md:rounded-3xl cursor-pointer shadow-lg shadow-black/5 ${containerClass}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -160,43 +132,30 @@ function ProjectCard({
           alt={project.name}
           fill
           className={`object-cover transition-all duration-[800ms] ease-out ${
-            hovered || (!isExpand && project.video) ? "group-hover:scale-[1.05] group-hover:opacity-0" : ""
-          } ${isExpand && hovered ? "scale-[1.05] !opacity-0" : ""}`}
+            project.video ? "md:group-hover:scale-[1.05] md:group-hover:opacity-0" : ""
+          }`}
           sizes="(max-width: 768px) 100vw, 480px"
         />
 
-        {/* Video layer */}
-        {project.video && (
+        {/* Video layer — only on desktop */}
+        {project.video && !isMobile && (
           <video
             ref={videoRef}
             src={project.video}
             muted
             playsInline
             preload="metadata"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isExpand
-                ? videoVisible ? "opacity-100" : "opacity-0"
-                : "opacity-0 group-hover:opacity-100"
-            }`}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 group-hover:opacity-100"
           />
         )}
 
-        {/* Gradient overlay on hover */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent transition-opacity duration-500 ${
-            isExpand
-              ? videoVisible ? "opacity-100" : "opacity-0"
-              : "opacity-0 group-hover:opacity-100"
-          }`}
-        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* View project pill on hover */}
-        <div className={`absolute bottom-5 right-5 transition-all duration-500 ${
-          isExpand
-            ? videoVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-            : "opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-        }`}>
-          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm text-[#0A0A0A] px-4 py-2 rounded-full">
-            <span className="text-[10px] font-mono tracking-[0.1em] uppercase font-medium">
+        {/* View project pill — always visible on mobile, hover on desktop */}
+        <div className="absolute bottom-4 right-4 md:bottom-5 md:right-5 md:opacity-0 md:group-hover:opacity-100 md:translate-y-2 md:group-hover:translate-y-0 transition-all duration-500">
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm text-[#0A0A0A] px-3 py-1.5 md:px-4 md:py-2 rounded-full">
+            <span className="text-[9px] md:text-[10px] font-mono tracking-[0.1em] uppercase font-medium">
               View Project
             </span>
             <svg
@@ -216,24 +175,24 @@ function ProjectCard({
         </div>
       </a>
 
-      {/* Project info — sits on the opposite side */}
+      {/* Project info */}
       <div className={`flex-1 flex flex-col ${isLeft ? "md:items-start md:text-left" : "md:items-end md:text-right"}`}>
-        <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-[#0066FF] mb-4">
+        <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-[#0066FF] mb-3 md:mb-4">
           {String(index + 1).padStart(2, "0")}
         </span>
-        <h3 className="text-3xl md:text-4xl font-bold text-[#0A0A0A] tracking-tight">
+        <h3 className="text-2xl md:text-4xl font-bold text-[#0A0A0A] tracking-tight">
           {project.name}
         </h3>
-        <p className="mt-3 text-[#737373] text-base font-light leading-relaxed max-w-sm">
+        <p className="mt-2 md:mt-3 text-[#737373] text-sm md:text-base font-light leading-relaxed max-w-sm">
           {project.description}
         </p>
 
         {/* Tags */}
-        <div className={`mt-5 flex gap-2 flex-wrap ${isLeft ? "" : "md:justify-end"}`}>
+        <div className={`mt-4 md:mt-5 flex gap-1.5 md:gap-2 flex-wrap ${isLeft ? "" : "md:justify-end"}`}>
           {project.tags.map((tag) => (
             <span
               key={tag}
-              className="text-[10px] font-mono tracking-[0.12em] uppercase text-[#737373] border border-[#E5E5E5] px-3.5 py-1.5 rounded-full whitespace-nowrap hover:border-[#0066FF] hover:text-[#0066FF] transition-colors duration-300"
+              className="text-[9px] md:text-[10px] font-mono tracking-[0.12em] uppercase text-[#737373] border border-[#E5E5E5] px-2.5 py-1 md:px-3.5 md:py-1.5 rounded-full whitespace-nowrap hover:border-[#0066FF] hover:text-[#0066FF] transition-colors duration-300"
             >
               {tag}
             </span>
@@ -249,10 +208,10 @@ export function Projects() {
   const headInView = useInView(headRef, { once: true, margin: "-80px" });
 
   return (
-    <section id="work" className="relative bg-[#FAFAFA] py-28 md:py-40">
+    <section id="work" className="relative bg-[#FAFAFA] py-16 md:py-40">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
         {/* Section header */}
-        <div ref={headRef} className="mb-20 md:mb-32">
+        <div ref={headRef} className="mb-12 md:mb-32">
           <motion.span
             initial={{ opacity: 0, x: -20 }}
             animate={headInView ? { opacity: 1, x: 0 } : {}}
@@ -285,7 +244,7 @@ export function Projects() {
         </div>
 
         {/* Alternating project cards */}
-        <div className="flex flex-col gap-24 md:gap-36">
+        <div className="flex flex-col gap-14 md:gap-36">
           {projects.map((project, i) => (
             <ProjectCard key={project.name} project={project} index={i} />
           ))}
